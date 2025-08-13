@@ -21,23 +21,31 @@
 
 #include "mutationofjb/inventoryitemdefinitionlist.h"
 
+#include "mutationofjb/game.h"
 #include "mutationofjb/encryptedfile.h"
 #include "mutationofjb/util.h"
 
 namespace MutationOfJB {
 
-InventoryItemDefinitionList::InventoryItemDefinitionList() {
-	parseFile();
+InventoryItemDefinitionList::InventoryItemDefinitionList(Game &game) {
+	parseFile(game.getLanguage());
 }
 
-int InventoryItemDefinitionList::findItemIndex(const Common::String &itemName) {
+int InventoryItemDefinitionList::findItemIndex(const Common::String &itemName) const {
 	const InventoryItemMap::const_iterator it = _inventoryItemMap.find(itemName);
 	if (it == _inventoryItemMap.end())
 		return -1;
 	return it->_value;
 }
 
-bool InventoryItemDefinitionList::parseFile() {
+const Common::String &InventoryItemDefinitionList::getItemName(const Common::String &itemName) const {
+	const int itemIndex = findItemIndex(itemName);
+	const InventoryItemNameMap::const_iterator it = _inventoryItemNamesMap.find(itemIndex);
+
+	return it->_value;
+}
+
+bool InventoryItemDefinitionList::parseFile(Common::Language lang) {
 	EncryptedFile file;
 	const char *fileName = "fixitems.dat";
 	file.open(fileName);
@@ -53,7 +61,7 @@ bool InventoryItemDefinitionList::parseFile() {
 			continue;
 		}
 
-		Common::String::const_iterator firstSpace = Common::find(line.begin(), line.end(), ' ');
+		Common::String::iterator firstSpace = Common::find(line.begin(), line.end(), ' ');
 		if (firstSpace == line.end()) {
 			continue;
 		}
@@ -63,10 +71,50 @@ bool InventoryItemDefinitionList::parseFile() {
 		}
 		Common::String item(line.c_str(), len);
 		_inventoryItemMap[item] = itemIndex;
+
+		// Get the translated item name..
+		Common::String translatedItemName = parseTranslatedItemName(line, lang);
+		if (translatedItemName.empty())
+			translatedItemName = Common::String(line.c_str());
+
+		_inventoryItemNamesMap[itemIndex] = translatedItemName;
 		itemIndex++;
 	}
 
 	return true;
+}
+
+Common::String InventoryItemDefinitionList::parseTranslatedItemName(const Common::String &itemLine, Common::Language lang) {
+	if (itemLine.empty() || itemLine.hasPrefix("#")) {
+		return Common::String();
+	}
+
+	uint spaceCounter = 0;
+	uint previousSpacePos = 0;
+	int nextSpacePos = 0;
+
+	do {
+		nextSpacePos = itemLine.find(' ', previousSpacePos + 1);
+		if (nextSpacePos > -1) {
+			if (previousSpacePos == 0) { // first part is the general item name which we'll skip
+				previousSpacePos = nextSpacePos;
+				spaceCounter++;
+				continue;
+			}
+
+			int translatedItemNameLength = nextSpacePos - previousSpacePos - 1;
+
+			if (lang == Common::SK_SVK && spaceCounter == 1) // string after first space is SK item name
+				return itemLine.substr(previousSpacePos + 1, translatedItemNameLength);
+			else if (lang == Common::DE_DEU && spaceCounter == 3) // string after third space is DE item name
+				return itemLine.substr(previousSpacePos + 1, translatedItemNameLength);
+
+			spaceCounter++;
+			previousSpacePos = nextSpacePos;
+		}
+	} while (nextSpacePos > -1 && previousSpacePos + 1 < itemLine.size());
+
+	return Common::String();
 }
 
 }

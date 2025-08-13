@@ -53,7 +53,7 @@ Game::Game(MutationOfJBEngine *vm)
 	EncryptedFile globalScriptFile;
 	globalScriptFile.open("global.atn");
 	_globalScript = new Script;
-	_globalScript->loadFromStream(globalScriptFile);
+	_globalScript->loadFromStream(globalScriptFile, getLanguage());
 	globalScriptFile.close();
 
 	_localScript = nullptr;
@@ -130,7 +130,7 @@ Script *Game::changeSceneLoadScript(uint8 sceneId, bool partB) {
 	scriptFile.seek(126, SEEK_CUR); // Skip 126 bytes.
 
 	Script *localScript = new Script;
-	localScript->loadFromStream(scriptFile);
+	localScript->loadFromStream(scriptFile, getLanguage());
 	scriptFile.close();
 
 	return localScript;

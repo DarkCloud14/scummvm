@@ -23,7 +23,7 @@
 
 namespace MutationOfJB {
 
-Assets::Assets(Game &game) : _toSayList("tosay.ger"), _responseList("response.ger"), _hardcodedStrings(game) {}
+Assets::Assets(Game &game) : _toSayList("tosay.ger"), _responseList("response.ger"), _hardcodedStrings(game), _invItemDefList(game) {}
 
 Font &Assets::getSystemFont() {
 	return _systemFont;

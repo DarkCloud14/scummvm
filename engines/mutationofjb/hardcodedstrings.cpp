@@ -70,11 +70,19 @@ void HardcodedStrings::loadStrings(Common::Language lang) {
 		_strings[WALK] = str;
 
 	str = file.readPascalString();
-	if (lang == Common::SK_SVK)
+	if (lang == Common::SK_SVK) {
 		_strings[LOOK] = str;
+		_strings[LOOKAT] = str;
+		_strings[AT] = Common::String();
+	}
 
-	file.readPascalString();
-	file.readPascalString();
+	str = file.readPascalString();
+	if (lang == Common::DE_DEU)
+		_strings[LOOKAT] = str;
+
+	str = file.readPascalString();
+	if (lang == Common::DE_DEU)
+		_strings[AT] = str;
 
 	str = file.readPascalString();
 	if (lang == Common::DE_DEU)

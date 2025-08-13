@@ -26,6 +26,7 @@
 #include "common/array.h"
 #include "common/hashmap.h"
 #include "common/hash-str.h"
+#include "common/language.h"
 #include "common/stack.h"
 
 namespace Common {
@@ -62,11 +63,18 @@ struct ActionInfo {
 	Command *_command;
 };
 
+struct EntityTranslationInfo {
+	Common::String _theEntity;
+	Common::String _walkToEntity;
+	Common::String _withEntity;
+};
+
 typedef Common::Array<ActionInfo> ActionInfos;
 typedef Common::Array<GotoCommand *> GotoCommands;
 typedef Common::HashMap<Common::String, Command *> Macros;
 typedef Common::HashMap<uint8, Command *> Startups;
 typedef Common::HashMap<Common::String, Command *> Extras;
+typedef Common::HashMap<Common::String, EntityTranslationInfo> EntityTranslationInfos;
 
 class ScriptParseContext {
 public:
@@ -129,7 +137,7 @@ private:
 
 class Script {
 public:
-	bool loadFromStream(Common::SeekableReadStream &stream);
+	bool loadFromStream(Common::SeekableReadStream &stream, Common::Language lang);
 	~Script();
 
 	const ActionInfos &getActionInfos(ActionInfo::Action action);
@@ -139,14 +147,17 @@ public:
 	Command *getMacro(const Common::String &name) const;
 	Command *getStartup(uint8 startupId) const;
 	Command *getExtra(const Common::String &name) const;
+	const Common::String &getEntityTranslation(const Common::String &name, ActionInfo::Action action, bool hasItemPicked) const;
 
 private:
 	void destroy();
+	void parseEntityTranslationInfos(const Common::String &line, ScriptParseContext &parseCtx, Common::Language lang);
 	Commands _allCommands;
 	ActionInfos _actionInfos[5];
 	Macros _macros;
 	Startups _startups;
 	Extras _extras;
+	EntityTranslationInfos _entityTranslationInfos;
 };
 
 }

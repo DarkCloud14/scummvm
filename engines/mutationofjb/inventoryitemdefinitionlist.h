@@ -22,26 +22,34 @@
 #ifndef MUTATIONOFJB_INVENTORYITEMDEFINITIONLIST_H
 #define MUTATIONOFJB_INVENTORYITEMDEFINITIONLIST_H
 
-#include "common/str.h"
 #include "common/hash-str.h"
 #include "common/hashmap.h"
+#include "common/language.h"
 
 namespace MutationOfJB {
 
+class Game;
+
 typedef Common::HashMap<Common::String, int> InventoryMap;
+typedef Common::HashMap<int, Common::String> InventoryItemNameMap;
 
 class InventoryItemDefinitionList {
 public:
-	InventoryItemDefinitionList();
-	const InventoryMap &getInventorMap() const;
+	InventoryItemDefinitionList(Game &game);
+	const InventoryMap &getInventoryMap() const;
 
-	int findItemIndex(const Common::String &itemName);
+	int findItemIndex(const Common::String &itemName) const;
+	const Common::String &getItemName(const Common::String &itemName) const;
 
 private:
-	bool parseFile();
+	bool parseFile(Common::Language lang);
+	Common::String parseTranslatedItemName(const Common::String &itemLine, Common::Language lang);
 
 	typedef Common::HashMap<Common::String, int> InventoryItemMap;
 	InventoryItemMap _inventoryItemMap;
+
+	typedef Common::HashMap<int, Common::String> InventoryItemNameMap;
+	InventoryItemNameMap _inventoryItemNamesMap;
 };
 
 }

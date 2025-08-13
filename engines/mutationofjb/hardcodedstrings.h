@@ -41,6 +41,8 @@ public:
 		WALK,
 		TALK,
 		LOOK,
+		LOOKAT,
+		AT,
 		USE,
 		PICKUP,
 

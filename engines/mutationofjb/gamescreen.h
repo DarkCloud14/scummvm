@@ -22,6 +22,7 @@
 #ifndef MUTATIONOFJB_GUI_H
 #define MUTATIONOFJB_GUI_H
 
+#include "mutationofjb/hardcodedstrings.h"
 #include "mutationofjb/inventory.h"
 #include "mutationofjb/script.h"
 #include "mutationofjb/guiscreen.h"
@@ -84,6 +85,8 @@ private:
 	void drawInventory();
 
 	void updateStatusBarText(const Common::String &entity, bool inventory);
+
+	static HardcodedStrings::StringType getActionStringType(ActionInfo::Action action, bool inventory);
 
 	Common::Array<Graphics::Surface> _inventorySurfaces;
 	Common::Array<Graphics::Surface> _hudSurfaces;

@@ -222,7 +222,7 @@ bool ScriptExecutionContext::isCommandRunning() const {
 	return _activeCommand;
 }
 
-bool Script::loadFromStream(Common::SeekableReadStream &stream) {
+bool Script::loadFromStream(Common::SeekableReadStream &stream, Common::Language lang) {
 	destroy();
 
 	CommandParser **parsers = getParsers();
@@ -244,6 +244,7 @@ bool Script::loadFromStream(Common::SeekableReadStream &stream) {
 			}
 		}
 		if (!currentParser) {
+			parseEntityTranslationInfos(line, parseCtx, lang);
 			continue;
 		}
 
@@ -326,6 +327,79 @@ Command *Script::getExtra(const Common::String &name) const {
 	}
 
 	return it->_value;
+}
+
+const Common::String &Script::getEntityTranslation(const Common::String &name, ActionInfo::Action action, bool hasItemPicked) const {
+	EntityTranslationInfos::const_iterator it = _entityTranslationInfos.find(name);
+	if (it == _entityTranslationInfos.end())
+		return name;
+
+	if (action == ActionInfo::Action::Walk)
+		return it->_value._walkToEntity;
+	else if (action == ActionInfo::Action::Talk || (action == ActionInfo::Action::Use && hasItemPicked))
+		return it->_value._withEntity;
+
+	return it->_value._theEntity;
+}
+
+void Script::parseEntityTranslationInfos(const Common::String &line, ScriptParseContext &parseCtx, Common::Language lang) {
+	if (line != "#TRANSLATION") {
+		return;
+	}
+
+	Common::String entityTranslationLine;
+	while (parseCtx.readLine(entityTranslationLine)) {
+		if (entityTranslationLine.empty()) {
+			continue;
+		}
+
+		if (entityTranslationLine.hasPrefix("#TRANSLATION")) {
+			break;
+		}
+
+		uint spaceCounter = 0;
+		int previousSpacePos = 0;
+		Common::String entityName;
+		EntityTranslationInfo entityTranslationInfo;
+		
+		do {
+			int nextSpacePos = entityTranslationLine.find(' ', previousSpacePos + 1);
+			if (previousSpacePos + 1 >= (int)entityTranslationLine.size())
+				continue;
+			
+			if (previousSpacePos == 0) { // first part is the general entity name
+				int entityNameLength = nextSpacePos - previousSpacePos;
+				entityName = entityTranslationLine.substr(previousSpacePos, entityNameLength);
+				if (entityName.hasSuffix("*L") || entityName.hasSuffix("*W") || entityName.hasSuffix("*T") || entityName.hasSuffix("*P") || entityName.hasSuffix("*U"))
+					entityName = entityName.substr(0, entityNameLength - 2);
+
+				previousSpacePos = nextSpacePos;
+				spaceCounter++;
+				continue;
+			}
+
+			if (lang == Common::DE_DEU && spaceCounter < 4) { // after the entity name there are three SK_SVK translations which we skip in case of DE_DEU
+				previousSpacePos = nextSpacePos;
+				spaceCounter++;
+				continue;
+			} else if (lang == Common::SK_SVK && spaceCounter > 3) {
+				break;
+			}
+
+			int textLength = nextSpacePos - previousSpacePos - 1;
+			if (spaceCounter == 1 || spaceCounter == 4)
+				entityTranslationInfo._walkToEntity = entityTranslationLine.substr(previousSpacePos + 1, textLength);
+			else if (spaceCounter == 2 || spaceCounter == 5)
+				entityTranslationInfo._theEntity = entityTranslationLine.substr(previousSpacePos + 1, textLength);
+			else
+				entityTranslationInfo._withEntity = entityTranslationLine.substr(previousSpacePos + 1, textLength);
+
+			spaceCounter++;
+			previousSpacePos = nextSpacePos;
+		} while (previousSpacePos != -1 && previousSpacePos + 1 < (int)entityTranslationLine.size());
+
+		_entityTranslationInfos[entityName] = entityTranslationInfo;
+	}
 }
 
 }

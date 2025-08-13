@@ -168,6 +168,8 @@ void GameScreen::handleEvent(const Common::Event &event) {
 		default:
 			break;
 		}
+
+		updateStatusBarText(Common::String(), false);
 		break;
 	}
 	default:
@@ -283,50 +285,24 @@ void GameScreen::updateStatusBarText(const Common::String &entity, bool inventor
 	const bool hasPrevPickedItem = !_currentPickedItem.empty();
 	const bool hasCurrentItem = !entity.empty();
 
+	HardcodedStrings::StringType actionStringType = GameScreen::getActionStringType(_currentAction, inventory);
+	Common::String text = _game.getAssets().getHardcodedStrings().getString(actionStringType);
+
 	if (!hasPrevPickedItem && !hasCurrentItem) {
-		_statusBarWidget->setText(Common::String());
+		if (actionStringType == HardcodedStrings::LOOKAT)
+			text = _game.getAssets().getHardcodedStrings().getString(HardcodedStrings::LOOK);
+
+		_statusBarWidget->setText(text);
 		return;
 	}
-
-	HardcodedStrings::StringType actionStringType = HardcodedStrings::LOOK;
-
-	if (inventory) {
-		switch (_currentAction) {
-		case ActionInfo::Use:
-			actionStringType = HardcodedStrings::USE;
-			break;
-		case ActionInfo::Look:
-		default:
-			actionStringType = HardcodedStrings::LOOK;
-			break;
-		}
-	} else {
-		switch (_currentAction) {
-		case ActionInfo::Look:
-		default:
-			actionStringType = HardcodedStrings::LOOK;
-			break;
-		case ActionInfo::Walk:
-			actionStringType = HardcodedStrings::WALK;
-			break;
-		case ActionInfo::Talk:
-			actionStringType = HardcodedStrings::TALK;
-			break;
-		case ActionInfo::Use:
-			actionStringType = HardcodedStrings::USE;
-			break;
-		case ActionInfo::PickUp:
-			actionStringType = HardcodedStrings::PICKUP;
-			break;
-		}
-	}
-
-	Common::String text = _game.getAssets().getHardcodedStrings().getString(actionStringType);
 
 	if (hasPrevPickedItem)
 		text += " " + _currentPickedItem;
 	if (hasCurrentItem)
 		text += " " + entity;
+
+	if (actionStringType == HardcodedStrings::LOOKAT)
+		text += " " + _game.getAssets().getHardcodedStrings().getString(HardcodedStrings::AT);
 
 	_statusBarWidget->setText(text);
 }
@@ -341,6 +317,7 @@ void GameScreen::onButtonClicked(ButtonWidget *button) {
 		const ActionInfo::Action actions[] = {ActionInfo::Walk, ActionInfo::Talk, ActionInfo::Look, ActionInfo::Use, ActionInfo::PickUp};
 		_currentAction = actions[buttonId];
 		_currentPickedItem.clear();
+		updateStatusBarText(Common::String(), false);
 	} else if (buttonId == BUTTON_SCROLL_LEFT) {
 		_game.getGameData().getInventory().scrollLeft();
 	} else if (buttonId == BUTTON_SCROLL_RIGHT) {
@@ -353,7 +330,8 @@ void GameScreen::onInventoryItemHovered(InventoryWidget *, int posInWidget) {
 		updateStatusBarText(Common::String(), true);
 	} else {
 		const Common::String &item = _game.getGameData().getInventory().getItems()[posInWidget];
-		updateStatusBarText(item, true);
+		const Common::String &itemName = _game.getAssets().getInventoryItemDefList().getItemName(item);
+		updateStatusBarText(itemName, true);
 	}
 }
 
@@ -409,14 +387,56 @@ void GameScreen::onGameStaticClicked(GameWidget *, Static *stat) {
 
 				_game.getGameData().getInventory().addItem(inventoryName);
 				stat->_active = 0;
-				_game.getRoom().drawStatic(stat);
+				_game.getRoom().drawStatic(stat);	
 			}
 		}
 	}
 }
 
 void GameScreen::onGameEntityHovered(GameWidget *, const Common::String &entity) {
-	updateStatusBarText(entity, false);
+	Common::String entityTranslationToShow = entity;
+
+	if (!entity.empty() && _game.getLocalScript())
+		entityTranslationToShow = _game.getLocalScript()->getEntityTranslation(entity, _currentAction, !_currentPickedItem.empty());
+
+	updateStatusBarText(entityTranslationToShow, false);
+}
+
+HardcodedStrings::StringType GameScreen::getActionStringType(ActionInfo::Action action, bool inventory) {
+	HardcodedStrings::StringType actionStringType = HardcodedStrings::LOOK;
+
+	if (inventory) {
+		switch (action) {
+		case ActionInfo::Use:
+			actionStringType = HardcodedStrings::USE;
+			break;
+		case ActionInfo::Look:
+		default:
+			actionStringType = HardcodedStrings::LOOKAT;
+			break;
+		}
+	} else {
+		switch (action) {
+		case ActionInfo::Look:
+		default:
+			actionStringType = HardcodedStrings::LOOKAT;
+			break;
+		case ActionInfo::Walk:
+			actionStringType = HardcodedStrings::WALK;
+			break;
+		case ActionInfo::Talk:
+			actionStringType = HardcodedStrings::TALK;
+			break;
+		case ActionInfo::Use:
+			actionStringType = HardcodedStrings::USE;
+			break;
+		case ActionInfo::PickUp:
+			actionStringType = HardcodedStrings::PICKUP;
+			break;
+		}
+	}
+
+	return actionStringType;
 }
 
 }

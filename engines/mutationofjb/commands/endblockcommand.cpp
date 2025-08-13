@@ -62,7 +62,7 @@ bool EndBlockCommandParser::parse(const Common::String &line, ScriptParseContext
 	}
 
 	const char firstChar = line.firstChar();
-	if (firstChar != '#' && firstChar != '=' && firstChar != '-' && firstChar != '\\') {
+	if ((firstChar != '#' && firstChar != '=' && firstChar != '-' && firstChar != '\\') || line.hasPrefix("#TRANSLATION")) {
 		return false;
 	}
 
@@ -133,7 +133,6 @@ bool EndBlockCommandParser::parse(const Common::String &line, ScriptParseContext
 	if (firstChar == '#') {
 		_hashFound = true;
 	}
-
 
 	return true;
 }
