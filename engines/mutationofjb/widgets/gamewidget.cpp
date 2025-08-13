@@ -91,6 +91,9 @@ void GameWidget::handleNormalScene(const Common::Event &event) {
 		const int16 x = event.mouse.x;
 		const int16 y = event.mouse.y;
 
+		if (game.getActiveSayTask())
+			break;
+
 		if (!_area.contains(x, y))
 			break;
 
@@ -141,6 +144,9 @@ void GameWidget::handleMapScene(const Common::Event &event) {
 	case Common::EVENT_LBUTTONDOWN: {
 		const int16 x = event.mouse.x;
 		const int16 y = event.mouse.y;
+
+		if (game.getActiveSayTask())
+			break;
 
 		int index = 0;
 		if (scene->findBitmap(x, y, &index)) {
