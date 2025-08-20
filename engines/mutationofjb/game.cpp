@@ -30,22 +30,46 @@
 #include "mutationofjb/tasks/objectanimationtask.h"
 #include "mutationofjb/util.h"
 
+#include "common/rect.h"
 #include "common/str.h"
 #include "common/util.h"
+
+#include "mutationofjb/video/mojb_decoder.h"
+#include "graphics/screen.h"
 
 #include "engines/advancedDetector.h"
 
 namespace MutationOfJB {
 
-Game::Game(MutationOfJBEngine *vm)
-	: _vm(vm),
-	  _randomSource("mutationofjb"),
-	  _delayedLocalScript(nullptr),
-	  _runDelayedScriptStartup(false),
-	  _gui(*this, _vm->getScreen()),
-	  _scriptExecCtx(*this),
-	  _taskManager(*this),
-	  _assets(*this) {
+Game::Game(MutationOfJBEngine *vm) :
+	_vm(vm),
+	_randomSource("mutationofjb"),
+	_delayedLocalScript(nullptr),
+	_runDelayedScriptStartup(false),
+	_gui(*this, _vm->getScreen()),
+	_scriptExecCtx(*this),
+	_taskManager(*this),
+	_assets(*this) {
+
+	MojbDecoder decoder;
+	decoder.loadFile("neologo.dat");
+	decoder.start();
+	Common::Rect rect(0, 0, 320, 200);
+	while (!decoder.endOfVideo()) {
+		if (decoder.needsUpdate()) {
+			// Get the next video frame and draw onto the screen
+			const Graphics::Surface *frame = decoder.decodeNextFrame();
+			if (decoder.hasDirtyPalette())
+				_vm->getScreen()->setPalette(decoder.getPalette(), 0, 256);
+
+			if (frame) {
+				_vm->getScreen()->blitFrom(*frame, rect, Common::Point(0,0 ));
+			}
+
+			_vm->getScreen()->update();
+		}
+	}
+	decoder.close();
 
 	_gameData = new GameData;
 	loadGameData(false);
