@@ -52,6 +52,7 @@ class InventoryWidget;
 class ConversationWidget;
 class LabelWidget;
 class GameWidget;
+class Animation;
 
 class GameScreen : public GuiScreen, public InventoryObserver, public ButtonWidgetCallback, public InventoryWidgetCallback, public GameWidgetCallback {
 public:
@@ -99,6 +100,7 @@ private:
 
 	ActionInfo::Action _currentAction;
 	Common::String _currentPickedItem;
+	Animation *_piggy;
 };
 
 }

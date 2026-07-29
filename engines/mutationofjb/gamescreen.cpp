@@ -22,6 +22,7 @@
 #include "mutationofjb/gamescreen.h"
 
 #include "mutationofjb/animationdecoder.h"
+#include "mutationofjb/character_animation.h"
 #include "mutationofjb/encryptedfile.h"
 #include "mutationofjb/game.h"
 #include "mutationofjb/gamedata.h"
@@ -137,6 +138,9 @@ bool GameScreen::init() {
 	_gameWidget = new GameWidget(*this);
 	_gameWidget->setCallback(this);
 	addWidget(_gameWidget);
+	
+	_piggy = new Animation();
+	_piggy->loadAnimation("piggy.apk");
 
 	return true;
 }
@@ -206,6 +210,10 @@ void GameScreen::refreshAfterSceneChanged() {
 
 			(*it)->setVisible(true);
 		}
+		
+		_game.getScreen().setPalette(_piggy->_palette, 223);
+		_game.getScreen().copyRectToSurface(_piggy->_frames[0]._data, 60, 245, 100, _piggy->_frames[0].width, _piggy->_frames[0].height);
+		//_game.getScreen().copyRectToSurface(_piggy->_frames[0]._transformedData, 30, 275, 130, 30, 59);
 	} else {
 		_gameWidget->setArea(Common::Rect(GameWidget::GAME_FULL_AREA_WIDTH, GameWidget::GAME_FULL_AREA_HEIGHT));
 		for (Widgets::const_iterator it = widgets.begin(); it != widgets.end(); ++it) {

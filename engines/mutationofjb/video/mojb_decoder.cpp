@@ -166,7 +166,7 @@ void MojbDecoder::MojbVideoTrack::decodeDeltaFLI(uint8 *data) {
 		// Now interpret the RLE data
 		while (packetCount--) {
 			column += *data++;
-			int rleCount = (int8)*data++;
+			int8 rleCount = (int8)*data++;
 			
 			if (rleCount > 0) {
 				memcpy((byte *)_surface->getBasePtr(column, currentLine), data, rleCount);
@@ -175,7 +175,7 @@ void MojbDecoder::MojbVideoTrack::decodeDeltaFLI(uint8 *data) {
 			} else if (rleCount < 0) {
 				rleCount = -rleCount;
 				uint8 dataByte = *data++;
-				for (int i = 0; i < rleCount; ++i) {
+				for (uint8 i = 0; i < rleCount; ++i) {
 					*((byte *)_surface->getBasePtr(column + i, currentLine)) = dataByte;
 				}
 				_dirtyRects.push_back(Common::Rect(column, currentLine, column + rleCount, currentLine + 1));

@@ -51,25 +51,25 @@ Game::Game(MutationOfJBEngine *vm) :
 	_taskManager(*this),
 	_assets(*this) {
 
-	MojbDecoder decoder;
-	decoder.loadFile("neologo.dat");
-	decoder.start();
-	Common::Rect rect(0, 0, 320, 200);
-	while (!decoder.endOfVideo()) {
-		if (decoder.needsUpdate()) {
-			// Get the next video frame and draw onto the screen
-			const Graphics::Surface *frame = decoder.decodeNextFrame();
-			if (decoder.hasDirtyPalette())
-				_vm->getScreen()->setPalette(decoder.getPalette(), 0, 256);
-
-			if (frame) {
-				_vm->getScreen()->blitFrom(*frame, rect, Common::Point(0,0 ));
-			}
-
-			_vm->getScreen()->update();
-		}
-	}
-	decoder.close();
+//	MojbDecoder decoder;
+//	decoder.loadFile("neologo.dat");
+//	decoder.start();
+//	Common::Rect rect(0, 0, 320, 200);
+//	while (!decoder.endOfVideo()) {
+//		if (decoder.needsUpdate()) {
+//			// Get the next video frame and draw onto the screen
+//			const Graphics::Surface *frame = decoder.decodeNextFrame();
+//			if (decoder.hasDirtyPalette())
+//				_vm->getScreen()->setPalette(decoder.getPalette(), 0, 256);
+//
+//			if (frame) {
+//				_vm->getScreen()->blitFrom(*frame, rect, Common::Point(0, 0));
+//			}
+//
+//			_vm->getScreen()->update();
+//		}
+//	}
+//	decoder.close();
 
 	_gameData = new GameData;
 	loadGameData(false);
@@ -151,6 +151,8 @@ Script *Game::changeSceneLoadScript(uint8 sceneId, bool partB) {
 	// TODO Actually parse this.
 	Common::String dummy;
 	dummy = scriptFile.readLine(); // Skip first line.
+	
+	// TODO byte 101 influences where the player character (e.g. piggy.apk) is drawn and hidden.
 	scriptFile.seek(126, SEEK_CUR); // Skip 126 bytes.
 
 	Script *localScript = new Script;
